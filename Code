@@ -1,0 +1,98 @@
+import cv2
+import face_recognition_models
+import numpy as np
+import csv
+import os
+import glob
+from datetime import datetime
+
+# Correct video capture (assuming webcam index 0)
+video_capture = cv2.VideoCapture(0)
+
+# Load known faces and create encodings
+jobs_image = face_recognition_models.load_image_file("/Users/divansharora/Desktop/jobs.png")
+jobs_encoding = face_recognition_models.face_encoding(jobs_image)[0]
+
+ratan_tata_image = face_recognition_models.load_image_file("/Users/divansharora/Desktop/ratan_tata.png")
+ratan_tata_encoding = face_recognition_models.face_encoding(ratan_tata_image)[0]
+
+mona_lisa_image = face_recognition_models.load_image_file("/Users/divansharora/Desktop/monalisa.png")  # Corrected filename
+mona_lisa_encoding = face_recognition_models.face_encoding(mona_lisa_image)[0]
+
+tesla_image = face_recognition_models.load_image_file("/Users/divansharora/Desktop/tesla.png")
+tesla_encoding = face_recognition_models.face_encoding(tesla_image)[0]
+
+known_face_encoding = [
+    jobs_encoding,
+    ratan_tata_encoding,
+    mona_lisa_encoding,
+    tesla_encoding
+]
+
+known_face_names = [
+    "jobs",
+    "ratan_tata",
+    "mona_lisa",  # Corrected name
+    "tesla"
+]
+
+students = known_face_names.copy()
+
+# Perform face detection initially
+face_locations = []
+face_encodings = []
+
+now = datetime.now()
+current_date = now.strftime("%y-%m-%d")
+
+# Open CSV file for appending (assuming headers exist)
+f = open(current_date + '.csv', 'a', newline='')
+lnwriter = csv.writer(f)
+
+# Flag to control frame processing (optional - can be removed with motion detection)
+frame_changed = True
+
+while True:
+    _, frame = video_capture.read()
+
+    # Resize frame for faster processing (optional - adjust based on performance)
+    # small_frame = cv2.resize(frame, (0, 0), fx=0.25, fy=0.25)
+    # rgb_small_frame = small_frame[:, :, ::-1]
+
+    if frame_changed:  # Process only when frame changes (optional)
+        # Detect faces only when frame changes (or implement motion detection)
+        face_locations = face_recognition_models.face_locations(frame)
+        face_encodings = face_recognition_models.face_encodings(frame, face_locations)
+        frame_changed = False  # Reset flag
+
+    face_names = []
+    for face_encoding in face_encodings:
+        # Match face with known faces
+        matches = face_recognition_models.compare_faces(known_face_encoding, face_encoding)
+
+        # Calculate face distances (assuming Euclidean distance)
+        face_distances = [np.linalg.norm(face_encoding - ref_face_encoding) for ref_face_encoding in known_face_encoding]
+        best_match_index = np.argmin(face_distances)  # Index of closest face
+
+        if matches[best_match_index]:
+            name = known_face_names[best_match_index]
+
+        face_names.append(name)
+
+        if name in known_face_names:
+            if name in students:
+                students.remove(name)
+                print(students)
+                current_time = now.strftime("%H-%M-%S")
+                lnwriter.writerow([name, current_time])
+
+    # Display frame with recognized names
+    cv2.imshow("attendance system", frame)
+
+    # Exit on 'q' key press
+    if cv2.waitKey(1) & 0xFF == ord('q'):
+        break
+
+video_capture.release()
+cv2.destroyAllWindows()
+f.close()
