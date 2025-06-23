@@ -34,7 +34,8 @@ This system eliminates manual roll calls and replaces them with a facial recogni
 
 ## 📸 Screenshots
 
-> *(Add sample screenshots of the UI or terminal output, face detection window, and generated CSV report)*
+><img width="775" alt="Screenshot 2025-06-23 at 12 22 57 PM" src="https://github.com/user-attachments/assets/6550fc43-6d41-4491-b76e-b96895072694" />
+
 
 ---
 
